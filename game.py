@@ -72,14 +72,17 @@ def valid_position(matrix: list) -> (int, int):
     return num1, num2
 
 
-def move_directions(x: int, y: int, matrix: list):
+# The knight moves in an L-shape, so it has to move 2 squares horizontally and 1 square vertically,
+# or 2 squares vertically and 1 square horizontally.
+# Check all 8 possible moving directions from the starting position.
+def move_directions(x: int, y: int, matrix: list) -> list:
     moves = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
     landing_position = []
     for i, j in moves:
         move_x = x + i
         move_y = y + j
         if 0 < move_x <= len(matrix[0]) and 0 < move_y <= len(matrix):
-            landing_position.append([move_x, move_y])
+            landing_position.append((move_x, move_y))
 
     return landing_position
 
@@ -97,14 +100,14 @@ def main():
         board[- start_position2][start_position1 - 1] = "X"
 
     moves = move_directions(start_position1, start_position2, board)
-    # print(moves)
+    print(moves)
     for h, v in moves:
         if dimension1 * dimension2 >= 100:
-            board[-v][h - 1] = "  0"
+            board[-v][h - 1] = f"  {len(move_directions(h, v, board)) - 1}"
         elif 100 > dimension1 * dimension2 >= 10:
-            board[-v][h - 1] = " 0"
+            board[-v][h - 1] = f" {len(move_directions(h, v, board)) - 1}"
         else:
-            board[-v][h - 1] = "0"
+            board[-v][h - 1] = f"{len(move_directions(h, v, board)) - 1}"
 
     knight_move = boarder_chess_board(board)
     print("\nHere are the possible moves:")
