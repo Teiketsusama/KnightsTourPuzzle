@@ -55,7 +55,23 @@ def generate_possible_move_positions(input_x: int, input_y: int, dim_x: int, dim
     return possible_positions
 
 
-def print_chess_board(dim_x: int, dim_y: int, current_position: tuple, visited_positions: list, possible_move_positions: list):
+def explore_board(current_position: tuple, dim_x: int, dim_y: int, visited_positions: list):
+    visited_positions.append(current_position)
+    possible_moves = generate_possible_move_positions(current_position[0], current_position[1], dim_x, dim_y, visited_positions)
+
+    if len(visited_positions) == dim_x * dim_y:
+        return visited_positions
+
+    for move in possible_moves:
+        if explore_board(move, dim_x, dim_y, visited_positions):
+            return visited_positions
+
+    visited_positions.pop()
+    return False
+
+
+def print_chess_board(dim_x: int, dim_y: int, current_position: tuple, visited_positions: list,
+                      possible_move_positions: list, show_move_order=False):
     num_cells = dim_x * dim_y
 
     if num_cells >= 100:
@@ -76,10 +92,15 @@ def print_chess_board(dim_x: int, dim_y: int, current_position: tuple, visited_p
             if (x, y) == current_position:
                 board_x_strs.append(((cell_length - 1) * " ") + "X")
             elif (x, y) in visited_positions:
-                board_x_strs.append(((cell_length - 1) * " ") + "*")
+                if show_move_order:
+                    move_order = visited_positions.index((x, y)) + 1
+                    board_x_strs.append(str(move_order).rjust(cell_length, " "))
+                else:
+                    board_x_strs.append(((cell_length - 1) * " ") + "*")
             elif (x, y) in possible_move_positions:
                 next_possible_move_positions = generate_possible_move_positions(x, y, dim_x, dim_y, visited_positions)
                 board_x_strs.append(((cell_length - 1) * " ") + str(len(next_possible_move_positions) - 1))
+
             else:
                 board_x_strs.append(cell_length * "_")
         board_x_strs.append("|")
@@ -134,7 +155,7 @@ def play_knight_moves(input_x: int, input_y: int, dim_x: int, dim_y: int, visite
         next_x, next_y = valid_move(dim_x, dim_y, visited_positions, possible_move_positions)
         current_position = (next_x, next_y)
         next_possible_move_positions = generate_possible_move_positions(next_x, next_y, dim_x, dim_y, visited_positions)
-        print_chess_board(dim_x, dim_y, current_position, visited_positions, next_possible_move_positions)
+        print_chess_board(dim_x, dim_y, current_position, visited_positions, next_possible_move_positions, False)
 
         input_x, input_y = next_x, next_y
         visited_positions.append((input_x, input_y))
@@ -145,10 +166,34 @@ def main():
     input_x, input_y = valid_position(dim_x, dim_y)
     current_position = (input_x, input_y)
     visited_positions = []
-    possible_move_positions = generate_possible_move_positions(current_position[0], current_position[1], dim_x, dim_y, visited_positions)
-    print_chess_board(dim_x, dim_y, current_position, visited_positions, possible_move_positions)
-    visited_positions.append(current_position)
-    play_knight_moves(input_x, input_y, dim_x, dim_y, visited_positions)
+
+    invalid_input = False
+    while not invalid_input:
+        user_input = input("Do you want to try the puzzle? (y/n): ")
+        if user_input not in ("y", "n"):
+            print("Invalid input!")
+            continue
+        else:
+            invalid_input = True
+
+    if user_input == "y":
+        if not explore_board(current_position, dim_x, dim_y, visited_positions):
+            print("No solution exists!")
+        else:
+            visited_positions = []
+            possible_move_positions = generate_possible_move_positions(current_position[0], current_position[1], dim_x,
+                                                                       dim_y, visited_positions)
+            print_chess_board(dim_x, dim_y, current_position, visited_positions, possible_move_positions, False)
+            visited_positions.append(current_position)
+            play_knight_moves(input_x, input_y, dim_x, dim_y, visited_positions)
+    else:
+        if not explore_board(current_position, dim_x, dim_y, visited_positions):
+            print("No solution exists!")
+        else:
+            visited_positions = []
+            solution = explore_board(current_position, dim_x, dim_y, visited_positions)
+            print("Here's the solution!")
+            print_chess_board(dim_x, dim_y, (), solution, [], True)
 
 
 if __name__ == "__main__":
